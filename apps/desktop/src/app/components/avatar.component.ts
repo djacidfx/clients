@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { Component, Input, OnChanges, OnInit } from "@angular/core";
 import { DomSanitizer, SafeResourceUrl } from "@angular/platform-browser";
 
@@ -26,12 +28,16 @@ export class AvatarComponent implements OnChanges, OnInit {
 
   ngOnInit() {
     if (!this.dynamic) {
+      // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       this.generate();
     }
   }
 
   ngOnChanges() {
     if (this.dynamic) {
+      // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       this.generate();
     }
   }
@@ -107,7 +113,7 @@ export class AvatarComponent implements OnChanges, OnInit {
     textTag.setAttribute("fill", Utils.pickTextColorBasedOnBgColor(color, 135, true));
     textTag.setAttribute(
       "font-family",
-      '"Open Sans","Helvetica Neue",Helvetica,Arial,' +
+      '"DM Sans","Helvetica Neue",Helvetica,Arial,' +
         'sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol"',
     );
     textTag.textContent = character;

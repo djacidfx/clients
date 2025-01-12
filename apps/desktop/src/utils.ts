@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 export type RendererMenuItem = {
   label?: string;
   type?: "normal" | "separator" | "submenu" | "checkbox" | "radio";
@@ -8,6 +10,8 @@ export function invokeMenu(menu: RendererMenuItem[]) {
   const menuWithoutClick = menu.map((m) => {
     return { label: m.label, type: m.type };
   });
+  // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
+  // eslint-disable-next-line @typescript-eslint/no-floating-promises
   ipc.platform.openContextMenu(menuWithoutClick).then((i: number) => {
     if (i !== -1) {
       menu[i].click();
@@ -53,15 +57,29 @@ export function isWindowsStore() {
   if (
     windows &&
     !windowsStore &&
-    process.resourcesPath.indexOf("8bitSolutionsLLC.bitwardendesktop_") > -1
+    process.resourcesPath?.indexOf("8bitSolutionsLLC.bitwardendesktop_") > -1
   ) {
     windowsStore = true;
   }
   return windows && windowsStore === true;
 }
 
+export function isFlatpak() {
+  return process.platform === "linux" && process.env.container != null;
+}
+
 export function isWindowsPortable() {
   return isWindows() && process.env.PORTABLE_EXECUTABLE_DIR != null;
+}
+
+/**
+ * We block the browser integration on some unsupported platforms, which also
+ * blocks partially supported platforms (mac .dmg in dev builds) / prevents
+ * experimenting with the feature for QA. So this env var allows overriding
+ * the block.
+ */
+export function allowBrowserintegrationOverride() {
+  return process.env.ALLOW_BROWSER_INTEGRATION_OVERRIDE === "true";
 }
 
 /**

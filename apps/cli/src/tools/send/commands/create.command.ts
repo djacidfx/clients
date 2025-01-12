@@ -1,8 +1,13 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import * as fs from "fs";
 import * as path from "path";
 
+import { firstValueFrom, switchMap } from "rxjs";
+
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abstractions/account/billing-account-profile-state.service";
 import { EnvironmentService } from "@bitwarden/common/platform/abstractions/environment.service";
-import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
 import { SendType } from "@bitwarden/common/tools/send/enums/send-type";
 import { SendApiService } from "@bitwarden/common/tools/send/services/send-api.service.abstraction";
 import { SendService } from "@bitwarden/common/tools/send/services/send.service.abstraction";
@@ -16,9 +21,10 @@ import { SendResponse } from "../models/send.response";
 export class SendCreateCommand {
   constructor(
     private sendService: SendService,
-    private stateService: StateService,
     private environmentService: EnvironmentService,
     private sendApiService: SendApiService,
+    private accountProfileService: BillingAccountProfileStateService,
+    private accountService: AccountService,
   ) {}
 
   async run(requestJson: any, cmdOptions: Record<string, any>) {
@@ -74,6 +80,10 @@ export class SendCreateCommand {
     req.key = null;
     req.maxAccessCount = maxAccessCount;
 
+    const hasPremium$ = this.accountService.activeAccount$.pipe(
+      switchMap(({ id }) => this.accountProfileService.hasPremiumFromAnySource$(id)),
+    );
+
     switch (req.type) {
       case SendType.File:
         if (process.env.BW_SERVE === "true") {
@@ -82,7 +92,7 @@ export class SendCreateCommand {
           );
         }
 
-        if (!(await this.stateService.getCanAccessPremium())) {
+        if (!(await firstValueFrom(hasPremium$))) {
           return Response.error("Premium status is required to use this feature.");
         }
 
@@ -125,7 +135,8 @@ export class SendCreateCommand {
       await this.sendApiService.save([encSend, fileData]);
       const newSend = await this.sendService.getFromState(encSend.id);
       const decSend = await newSend.decrypt();
-      const res = new SendResponse(decSend, this.environmentService.getWebVaultUrl());
+      const env = await firstValueFrom(this.environmentService.environment$);
+      const res = new SendResponse(decSend, env.getWebVaultUrl());
       return Response.success(res);
     } catch (e) {
       return Response.error(e);

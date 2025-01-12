@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import * as fs from "fs";
 import * as path from "path";
 
@@ -98,6 +100,8 @@ export class LowdbStorageService implements AbstractStorageService {
     }
 
     if (this.defaults != null) {
+      // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       this.lockDbFile(() => {
         this.logService.info("Writing defaults.");
         this.readForNoCache();
@@ -134,6 +138,8 @@ export class LowdbStorageService implements AbstractStorageService {
     await this.waitForReady();
     return this.lockDbFile(() => {
       this.readForNoCache();
+      // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       this.db.set(key, obj).write();
       this.updatesSubject.next({ key, updateType: "save" });
       this.logService.debug(`Successfully wrote ${key} to db`);
@@ -145,6 +151,8 @@ export class LowdbStorageService implements AbstractStorageService {
     await this.waitForReady();
     return this.lockDbFile(() => {
       this.readForNoCache();
+      // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       this.db.unset(key).write();
       this.updatesSubject.next({ key, updateType: "remove" });
       this.logService.debug(`Successfully removed ${key} from db`);
@@ -159,6 +167,8 @@ export class LowdbStorageService implements AbstractStorageService {
         try {
           return action();
         } finally {
+          // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
+          // eslint-disable-next-line @typescript-eslint/no-floating-promises
           release();
         }
       });

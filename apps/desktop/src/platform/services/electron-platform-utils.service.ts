@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { ClientType, DeviceType } from "@bitwarden/common/enums";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
@@ -6,8 +8,9 @@ import {
   PlatformUtilsService,
 } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 
-import { isMacAppStore } from "../../utils";
 import { ClipboardWriteMessage } from "../types/clipboard";
+
+export const ELECTRON_SUPPORTS_SECURE_STORAGE = true;
 
 export class ElectronPlatformUtilsService implements PlatformUtilsService {
   constructor(
@@ -53,7 +56,7 @@ export class ElectronPlatformUtilsService implements PlatformUtilsService {
   }
 
   isMacAppStore(): boolean {
-    return isMacAppStore();
+    return ipc.platform.isMacAppStore;
   }
 
   isViewOpen(): Promise<boolean> {
@@ -61,6 +64,8 @@ export class ElectronPlatformUtilsService implements PlatformUtilsService {
   }
 
   launchUri(uri: string, options?: any): void {
+    // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     ipc.platform.launchUri(uri);
   }
 
@@ -108,6 +113,8 @@ export class ElectronPlatformUtilsService implements PlatformUtilsService {
     const clearing = options?.clearing === true;
     const clearMs = options?.clearMs ?? null;
 
+    // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     ipc.platform.clipboard.write({
       text: text,
       password: (options?.allowHistory ?? false) === false, // default to false
@@ -126,20 +133,8 @@ export class ElectronPlatformUtilsService implements PlatformUtilsService {
     return ipc.platform.clipboard.read();
   }
 
-  async supportsBiometric(): Promise<boolean> {
-    return await ipc.platform.biometric.osSupported();
-  }
-
-  /** This method is used to authenticate the user presence _only_.
-   * It should not be used in the process to retrieve
-   * biometric keys, which has a separate authentication mechanism.
-   * For biometric keys, invoke "keytar" with a biometric key suffix */
-  async authenticateBiometric(): Promise<boolean> {
-    return await ipc.platform.biometric.authenticate();
-  }
-
   supportsSecureStorage(): boolean {
-    return true;
+    return ELECTRON_SUPPORTS_SECURE_STORAGE;
   }
 
   getAutofillKeyboardShortcut(): Promise<string> {

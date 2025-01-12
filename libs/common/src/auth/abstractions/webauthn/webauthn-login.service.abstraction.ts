@@ -1,5 +1,5 @@
-import { Observable } from "rxjs";
-
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { AuthResult } from "../../models/domain/auth-result";
 import { WebAuthnLoginCredentialAssertionOptionsView } from "../../models/view/webauthn-login/webauthn-login-credential-assertion-options.view";
 import { WebAuthnLoginCredentialAssertionView } from "../../models/view/webauthn-login/webauthn-login-credential-assertion.view";
@@ -8,11 +8,6 @@ import { WebAuthnLoginCredentialAssertionView } from "../../models/view/webauthn
  * Service for logging in with WebAuthnLogin credentials.
  */
 export abstract class WebAuthnLoginServiceAbstraction {
-  /**
-   * An Observable that emits a boolean indicating whether the WebAuthn login feature is enabled.
-   */
-  readonly enabled$: Observable<boolean>;
-
   /**
    * Gets the credential assertion options needed for initiating the WebAuthn
    * authentication process. It should provide the challenge and other data

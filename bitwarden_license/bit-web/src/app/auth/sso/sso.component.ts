@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { Component, OnDestroy, OnInit } from "@angular/core";
 import {
   AbstractControl,
@@ -7,7 +9,7 @@ import {
   Validators,
 } from "@angular/forms";
 import { ActivatedRoute } from "@angular/router";
-import { concatMap, Subject, takeUntil } from "rxjs";
+import { concatMap, Observable, Subject, takeUntil } from "rxjs";
 
 import { ControlsOf } from "@bitwarden/angular/types/controls-of";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
@@ -27,10 +29,11 @@ import { OrganizationSsoRequest } from "@bitwarden/common/auth/models/request/or
 import { OrganizationSsoResponse } from "@bitwarden/common/auth/models/response/organization-sso.response";
 import { SsoConfigView } from "@bitwarden/common/auth/models/view/sso-config.view";
 import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
-import { ConfigServiceAbstraction } from "@bitwarden/common/platform/abstractions/config/config.service.abstraction";
+import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
+import { ToastService } from "@bitwarden/components";
 
 import { ssoTypeValidator } from "./sso-type.validator";
 
@@ -61,6 +64,10 @@ export class SsoComponent implements OnInit, OnDestroy {
     "http://www.w3.org/2000/09/xmldsig#rsa-sha384",
     "http://www.w3.org/2000/09/xmldsig#rsa-sha512",
   ];
+
+  readonly samlSigningAlgorithmOptions: SelectOptions[] = this.samlSigningAlgorithms.map(
+    (algorithm) => ({ name: algorithm, value: algorithm }),
+  );
 
   readonly saml2SigningBehaviourOptions: SelectOptions[] = [
     {
@@ -105,6 +112,7 @@ export class SsoComponent implements OnInit, OnDestroy {
   callbackPath: string;
   signedOutCallbackPath: string;
   spEntityId: string;
+  spEntityIdStatic: string;
   spMetadataUrl: string;
   spAcsUrl: string;
 
@@ -133,6 +141,7 @@ export class SsoComponent implements OnInit, OnDestroy {
 
   protected samlForm = this.formBuilder.group<ControlsOf<SsoConfigView["saml"]>>(
     {
+      spUniqueEntityId: new FormControl(true, { updateOn: "change" }),
       spNameIdFormat: new FormControl(Saml2NameIdFormat.NotConfigured),
       spOutboundSigningAlgorithm: new FormControl(defaultSigningAlgorithm),
       spSigningBehavior: new FormControl(Saml2SigningBehavior.IfIdpWantAuthnRequestsSigned),
@@ -177,6 +186,8 @@ export class SsoComponent implements OnInit, OnDestroy {
     return this.ssoConfigForm?.controls?.configType as FormControl;
   }
 
+  accountDeprovisioningEnabled$: Observable<boolean>;
+
   constructor(
     private formBuilder: FormBuilder,
     private route: ActivatedRoute,
@@ -185,8 +196,13 @@ export class SsoComponent implements OnInit, OnDestroy {
     private i18nService: I18nService,
     private organizationService: OrganizationService,
     private organizationApiService: OrganizationApiServiceAbstraction,
-    private configService: ConfigServiceAbstraction,
-  ) {}
+    private configService: ConfigService,
+    private toastService: ToastService,
+  ) {
+    this.accountDeprovisioningEnabled$ = this.configService.getFeatureFlag$(
+      FeatureFlag.AccountDeprovisioning,
+    );
+  }
 
   async ngOnInit() {
     this.enabledCtrl.valueChanges.pipe(takeUntil(this.destroy$)).subscribe((enabled) => {
@@ -235,14 +251,7 @@ export class SsoComponent implements OnInit, OnDestroy {
       )
       .subscribe();
 
-    const tdeFeatureFlag = await this.configService.getFeatureFlag<boolean>(
-      FeatureFlag.TrustedDeviceEncryption,
-    );
-
-    this.showTdeOptions = tdeFeatureFlag;
-    // If the tde flag is not enabled, continue showing the key connector options to keep the UI the same
-    // Once the flag is removed, we can rely on the platformUtilsService.isSelfHost() check alone
-    this.showKeyConnectorOptions = !tdeFeatureFlag || this.platformUtilsService.isSelfHost();
+    this.showKeyConnectorOptions = this.platformUtilsService.isSelfHost();
   }
 
   ngOnDestroy(): void {
@@ -258,6 +267,7 @@ export class SsoComponent implements OnInit, OnDestroy {
     this.callbackPath = ssoSettings.urls.callbackPath;
     this.signedOutCallbackPath = ssoSettings.urls.signedOutCallbackPath;
     this.spEntityId = ssoSettings.urls.spEntityId;
+    this.spEntityIdStatic = ssoSettings.urls.spEntityIdStatic;
     this.spMetadataUrl = ssoSettings.urls.spMetadataUrl;
     this.spAcsUrl = ssoSettings.urls.spAcsUrl;
 
@@ -285,7 +295,11 @@ export class SsoComponent implements OnInit, OnDestroy {
     const response = await this.organizationApiService.updateSso(this.organizationId, request);
     this.populateForm(response);
 
-    this.platformUtilsService.showToast("success", null, this.i18nService.t("ssoSettingsSaved"));
+    this.toastService.showToast({
+      variant: "success",
+      title: null,
+      message: this.i18nService.t("ssoSettingsSaved"),
+    });
   };
 
   async validateKeyConnectorUrl() {
@@ -335,10 +349,6 @@ export class SsoComponent implements OnInit, OnDestroy {
     return this.ssoConfigForm.get("keyConnectorUrl");
   }
 
-  get samlSigningAlgorithmOptions(): SelectOptions[] {
-    return this.samlSigningAlgorithms.map((algorithm) => ({ name: algorithm, value: algorithm }));
-  }
-
   /**
    * Shows any validation errors for the form by marking all controls as dirty and touched.
    * If nested form groups are found, they are also updated.
@@ -374,7 +384,7 @@ export class SsoComponent implements OnInit, OnDestroy {
     );
 
     const div = document.createElement("div");
-    div.className = "sr-only";
+    div.className = "tw-sr-only";
     div.id = "srErrorCount";
     div.setAttribute("aria-live", "polite");
     div.innerText = errorText + ": " + errorCountText;

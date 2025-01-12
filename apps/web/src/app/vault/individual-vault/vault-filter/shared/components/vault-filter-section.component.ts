@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { Component, InjectionToken, Injector, Input, OnDestroy, OnInit } from "@angular/core";
 import { Observable, Subject, takeUntil } from "rxjs";
 import { map } from "rxjs/operators";
@@ -35,7 +37,7 @@ export class VaultFilterSectionComponent implements OnInit, OnDestroy {
       });
   }
 
-  ngOnInit() {
+  async ngOnInit() {
     this.section?.data$?.pipe(takeUntil(this.destroy$)).subscribe((data) => {
       this.data = data;
     });
@@ -67,11 +69,18 @@ export class VaultFilterSectionComponent implements OnInit, OnDestroy {
   }
 
   isNodeSelected(filterNode: TreeNode<VaultFilterType>) {
+    const { organizationId, cipherTypeId, folderId, collectionId, isCollectionSelected } =
+      this.activeFilter;
+
+    const collectionStatus =
+      filterNode?.node.id === "AllCollections" &&
+      (isCollectionSelected || collectionId === "AllCollections");
+
     return (
-      this.activeFilter.organizationId === filterNode?.node.id ||
-      this.activeFilter.cipherTypeId === filterNode?.node.id ||
-      this.activeFilter.folderId === filterNode?.node.id ||
-      this.activeFilter.collectionId === filterNode?.node.id
+      organizationId === filterNode?.node.id ||
+      cipherTypeId === filterNode?.node.id ||
+      folderId === filterNode?.node.id ||
+      collectionStatus
     );
   }
 

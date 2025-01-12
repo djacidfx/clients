@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { ApiService } from "../../abstractions/api.service";
 import { ListResponse } from "../../models/response/list.response";
 import { Utils } from "../../platform/misc/utils";
@@ -71,13 +73,20 @@ export class DevicesApiServiceImplementation implements DevicesApiServiceAbstrac
     return new DeviceResponse(result);
   }
 
-  async updateTrust(updateDevicesTrustRequestModel: UpdateDevicesTrustRequest): Promise<void> {
+  async updateTrust(
+    updateDevicesTrustRequestModel: UpdateDevicesTrustRequest,
+    deviceIdentifier: string,
+  ): Promise<void> {
     await this.apiService.send(
       "POST",
       "/devices/update-trust",
       updateDevicesTrustRequestModel,
       true,
       false,
+      null,
+      (headers) => {
+        headers.set("Device-Identifier", deviceIdentifier);
+      },
     );
   }
 
@@ -93,5 +102,23 @@ export class DevicesApiServiceImplementation implements DevicesApiServiceAbstrac
       true,
     );
     return new ProtectedDeviceResponse(result);
+  }
+
+  async postDeviceTrustLoss(deviceIdentifier: string): Promise<void> {
+    await this.apiService.send(
+      "POST",
+      "/devices/lost-trust",
+      null,
+      true,
+      false,
+      null,
+      (headers) => {
+        headers.set("Device-Identifier", deviceIdentifier);
+      },
+    );
+  }
+
+  async deactivateDevice(deviceId: string): Promise<void> {
+    await this.apiService.send("POST", `/devices/${deviceId}/deactivate`, null, true, false);
   }
 }

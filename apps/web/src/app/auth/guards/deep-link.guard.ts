@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { inject } from "@angular/core";
 import { CanActivateFn, Router } from "@angular/router";
 
@@ -51,6 +53,6 @@ export function deepLinkGuard(): CanActivateFn {
   };
 
   function isValidUrl(url: string | null | undefined): boolean {
-    return !Utils.isNullOrEmpty(url) && !url?.toLocaleLowerCase().includes("lock");
+    return !Utils.isNullOrEmpty(url) && !url?.toLocaleLowerCase().includes("/lock");
   }
 }

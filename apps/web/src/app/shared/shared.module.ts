@@ -3,8 +3,7 @@ import { CommonModule, DatePipe } from "@angular/common";
 import { NgModule } from "@angular/core";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { RouterModule } from "@angular/router";
-import { InfiniteScrollModule } from "ngx-infinite-scroll";
-import { ToastrModule } from "ngx-toastr";
+import { InfiniteScrollDirective } from "ngx-infinite-scroll";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import {
@@ -16,6 +15,7 @@ import {
   CalloutModule,
   CheckboxModule,
   ColorPasswordModule,
+  ContainerComponent,
   DialogModule,
   FormFieldModule,
   IconButtonModule,
@@ -25,6 +25,7 @@ import {
   MultiSelectModule,
   ProgressModule,
   RadioButtonModule,
+  SectionComponent,
   SelectModule,
   TableModule,
   TabsModule,
@@ -48,9 +49,8 @@ import "./locales";
     DragDropModule,
     FormsModule,
     ReactiveFormsModule,
-    InfiniteScrollModule,
+    InfiniteScrollDirective,
     RouterModule,
-    ToastrModule,
     JslibModule,
 
     // Component library modules
@@ -63,6 +63,7 @@ import "./locales";
     CalloutModule,
     CheckboxModule,
     ColorPasswordModule,
+    ContainerComponent,
     DialogModule,
     FormFieldModule,
     IconButtonModule,
@@ -72,6 +73,7 @@ import "./locales";
     MultiSelectModule,
     ProgressModule,
     RadioButtonModule,
+    SectionComponent,
     TableModule,
     TabsModule,
     ToggleGroupModule,
@@ -84,9 +86,8 @@ import "./locales";
     DragDropModule,
     FormsModule,
     ReactiveFormsModule,
-    InfiniteScrollModule,
+    InfiniteScrollDirective,
     RouterModule,
-    ToastrModule,
     JslibModule,
 
     // Component library
@@ -98,6 +99,7 @@ import "./locales";
     CalloutModule,
     CheckboxModule,
     ColorPasswordModule,
+    ContainerComponent,
     DialogModule,
     FormFieldModule,
     IconButtonModule,
@@ -107,6 +109,7 @@ import "./locales";
     MultiSelectModule,
     ProgressModule,
     RadioButtonModule,
+    SectionComponent,
     SelectModule,
     TableModule,
     TabsModule,

@@ -1,15 +1,20 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 /* eslint-disable no-useless-escape */
 import * as path from "path";
 
+import { Buffer as BufferLib } from "buffer/";
 import { Observable, of, switchMap } from "rxjs";
 import { getHostname, parse } from "tldts";
 import { Merge } from "type-fest";
 
-import { CryptoService } from "../abstractions/crypto.service";
+// FIXME: remove `src` and fix import
+// eslint-disable-next-line no-restricted-imports
+import { KeyService } from "../../../../key-management/src/abstractions/key.service";
 import { EncryptService } from "../abstractions/encrypt.service";
 import { I18nService } from "../abstractions/i18n.service";
 
-const nodeURL = typeof window === "undefined" ? require("url") : null;
+const nodeURL = typeof self === "undefined" ? require("url") : null;
 
 declare global {
   /* eslint-disable-next-line no-var */
@@ -17,7 +22,7 @@ declare global {
 }
 
 interface BitwardenContainerService {
-  getCryptoService: () => CryptoService;
+  getKeyService: () => KeyService;
   getEncryptService: () => EncryptService;
 }
 
@@ -145,13 +150,7 @@ export class Utils {
   }
 
   static fromBufferToUtf8(buffer: ArrayBuffer): string {
-    if (Utils.isNode) {
-      return Buffer.from(buffer).toString("utf8");
-    } else {
-      const bytes = new Uint8Array(buffer);
-      const encodedString = String.fromCharCode.apply(null, bytes);
-      return decodeURIComponent(escape(encodedString));
-    }
+    return BufferLib.from(buffer).toString("utf8");
   }
 
   static fromBufferToByteString(buffer: ArrayBuffer): string {
@@ -258,11 +257,10 @@ export class Utils {
     });
   }
 
+  static guidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+
   static isGuid(id: string) {
-    return RegExp(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
-      "i",
-    ).test(id);
+    return RegExp(Utils.guidRegex, "i").test(id);
   }
 
   static getHostname(uriString: string): string {

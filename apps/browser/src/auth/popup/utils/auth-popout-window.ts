@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { BrowserApi } from "../../../platform/browser/browser-api";
 import BrowserPopupUtils from "../../../platform/popup/browser-popup-utils";
 
@@ -21,6 +23,8 @@ async function openUnlockPopout(senderTab: chrome.tabs.Tab, skipNotification = f
   const existingPopoutWindowTabs = await BrowserApi.tabsQuery({ windowType: "popup" });
   existingPopoutWindowTabs.forEach((tab) => {
     if (extensionUnlockUrls.has(tab.url)) {
+      // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       BrowserApi.removeWindow(tab.windowId);
     }
   });

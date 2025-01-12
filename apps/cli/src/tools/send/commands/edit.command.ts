@@ -1,4 +1,9 @@
-import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
+import { firstValueFrom } from "rxjs";
+
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abstractions/account/billing-account-profile-state.service";
 import { SendType } from "@bitwarden/common/tools/send/enums/send-type";
 import { SendApiService } from "@bitwarden/common/tools/send/services/send-api.service.abstraction";
 import { SendService } from "@bitwarden/common/tools/send/services/send.service.abstraction";
@@ -12,9 +17,10 @@ import { SendGetCommand } from "./get.command";
 export class SendEditCommand {
   constructor(
     private sendService: SendService,
-    private stateService: StateService,
     private getCommand: SendGetCommand,
     private sendApiService: SendApiService,
+    private accountProfileService: BillingAccountProfileStateService,
+    private accountService: AccountService,
   ) {}
 
   async run(requestJson: string, cmdOptions: Record<string, any>): Promise<Response> {
@@ -57,7 +63,11 @@ export class SendEditCommand {
       return Response.badRequest("Cannot change a Send's type");
     }
 
-    if (send.type === SendType.File && !(await this.stateService.getCanAccessPremium())) {
+    const account = await firstValueFrom(this.accountService.activeAccount$);
+    const canAccessPremium = await firstValueFrom(
+      this.accountProfileService.hasPremiumFromAnySource$(account.id),
+    );
+    if (send.type === SendType.File && !canAccessPremium) {
       return Response.error("Premium status is required to use this feature.");
     }
 

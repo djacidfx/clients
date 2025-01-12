@@ -1,15 +1,17 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { DialogConfig, DialogRef } from "@angular/cdk/dialog";
 import { Component, OnInit } from "@angular/core";
 import { FormBuilder, Validators } from "@angular/forms";
 import { firstValueFrom, map, Observable } from "rxjs";
 
-import { PrfKeySet } from "@bitwarden/auth";
+import { PrfKeySet } from "@bitwarden/auth/common";
 import { Verification } from "@bitwarden/common/auth/types/verification";
 import { ErrorResponse } from "@bitwarden/common/models/response/error.response";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
-import { DialogService } from "@bitwarden/components";
+import { DialogService, ToastService } from "@bitwarden/components";
 
 import { WebauthnLoginAdminService } from "../../../core";
 import { CredentialCreateOptionsView } from "../../../core/views/credential-create-options.view";
@@ -44,7 +46,7 @@ export class CreateCredentialDialogComponent implements OnInit {
     }),
     credentialNaming: this.formBuilder.group({
       name: ["", Validators.maxLength(50)],
-      useForEncryption: [false],
+      useForEncryption: [true],
     }),
   });
 
@@ -60,6 +62,7 @@ export class CreateCredentialDialogComponent implements OnInit {
     private platformUtilsService: PlatformUtilsService,
     private i18nService: I18nService,
     private logService: LogService,
+    private toastService: ToastService,
   ) {}
 
   ngOnInit(): void {
@@ -102,11 +105,11 @@ export class CreateCredentialDialogComponent implements OnInit {
         this.invalidSecret = true;
       } else {
         this.logService?.error(error);
-        this.platformUtilsService.showToast(
-          "error",
-          this.i18nService.t("unexpectedError"),
-          error.message,
-        );
+        this.toastService.showToast({
+          variant: "error",
+          title: this.i18nService.t("unexpectedError"),
+          message: error.message,
+        });
       }
       return;
     }
@@ -137,7 +140,10 @@ export class CreateCredentialDialogComponent implements OnInit {
     }
 
     let keySet: PrfKeySet | undefined;
-    if (this.formGroup.value.credentialNaming.useForEncryption) {
+    if (
+      this.pendingCredential.supportsPrf &&
+      this.formGroup.value.credentialNaming.useForEncryption
+    ) {
       keySet = await this.webauthnService.createKeySet(this.pendingCredential);
 
       if (keySet === undefined) {
@@ -159,17 +165,17 @@ export class CreateCredentialDialogComponent implements OnInit {
     );
 
     if (await firstValueFrom(this.hasPasskeys$)) {
-      this.platformUtilsService.showToast(
-        "success",
-        null,
-        this.i18nService.t("passkeySaved", name),
-      );
+      this.toastService.showToast({
+        variant: "success",
+        title: null,
+        message: this.i18nService.t("passkeySaved", name),
+      });
     } else {
-      this.platformUtilsService.showToast(
-        "success",
-        null,
-        this.i18nService.t("loginWithPasskeyEnabled"),
-      );
+      this.toastService.showToast({
+        variant: "success",
+        title: null,
+        message: this.i18nService.t("loginWithPasskeyEnabled"),
+      });
     }
 
     this.dialogRef.close(CreateCredentialDialogResult.Success);

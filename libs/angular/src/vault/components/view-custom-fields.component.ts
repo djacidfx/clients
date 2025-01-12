@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { Directive, Input } from "@angular/core";
 
 import { EventCollectionService } from "@bitwarden/common/abstractions/event/event-collection.service";
@@ -25,6 +27,8 @@ export class ViewCustomFieldsComponent {
     f.showValue = !f.showValue;
     f.showCount = false;
     if (f.showValue) {
+      // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       this.eventCollectionService.collect(
         EventType.Cipher_ClientToggledHiddenFieldVisible,
         this.cipher.id,

@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { Component } from "@angular/core";
 
 import { OrganizationFilterComponent as BaseOrganizationFilterComponent } from "@bitwarden/angular/vault/vault-filter/components/organization-filter.component";
@@ -30,6 +32,8 @@ export class OrganizationFilterComponent extends BaseOrganizationFilterComponent
   async applyOrganizationFilter(organization: Organization) {
     if (organization.enabled) {
       //proceed with default behaviour for enabled organizations
+      // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       super.applyOrganizationFilter(organization);
     } else {
       this.platformUtilsService.showToast(

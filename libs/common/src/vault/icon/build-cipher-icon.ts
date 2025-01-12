@@ -2,12 +2,7 @@ import { Utils } from "../../platform/misc/utils";
 import { CipherType } from "../enums/cipher-type";
 import { CipherView } from "../models/view/cipher.view";
 
-export function buildCipherIcon(
-  iconsServerUrl: string,
-  cipher: CipherView,
-  isFaviconDisabled: boolean,
-) {
-  const imageEnabled = !isFaviconDisabled;
+export function buildCipherIcon(iconsServerUrl: string, cipher: CipherView, showFavicon: boolean) {
   let icon;
   let image;
   let fallbackImage = "";
@@ -38,17 +33,23 @@ export function buildCipherIcon(
           icon = "bwi-apple";
           image = null;
         } else if (
-          imageEnabled &&
+          showFavicon &&
           hostnameUri.indexOf("://") === -1 &&
           hostnameUri.indexOf(".") > -1
         ) {
           hostnameUri = `http://${hostnameUri}`;
           isWebsite = true;
-        } else if (imageEnabled) {
+        } else if (showFavicon) {
           isWebsite = hostnameUri.indexOf("http") === 0 && hostnameUri.indexOf(".") > -1;
         }
 
-        if (imageEnabled && isWebsite) {
+        if (isWebsite && (hostnameUri.endsWith(".onion") || hostnameUri.endsWith(".i2p"))) {
+          image = null;
+          fallbackImage = "images/bwi-globe.png";
+          break;
+        }
+
+        if (showFavicon && isWebsite) {
           try {
             image = `${iconsServerUrl}/${Utils.getHostname(hostnameUri)}/icon.png`;
             fallbackImage = "images/bwi-globe.png";
@@ -65,19 +66,22 @@ export function buildCipherIcon(
       break;
     case CipherType.Card:
       icon = "bwi-credit-card";
-      if (imageEnabled && cipher.card.brand in cardIcons) {
+      if (showFavicon && cipher.card.brand in cardIcons) {
         icon = `credit-card-icon ${cardIcons[cipher.card.brand]}`;
       }
       break;
     case CipherType.Identity:
       icon = "bwi-id-card";
       break;
+    case CipherType.SshKey:
+      icon = "bwi-key";
+      break;
     default:
       break;
   }
 
   return {
-    imageEnabled,
+    imageEnabled: showFavicon,
     image,
     fallbackImage,
     icon,

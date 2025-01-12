@@ -1,26 +1,30 @@
-import { Component } from "@angular/core";
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
+import { Component, OnInit } from "@angular/core";
+import { Observable, switchMap } from "rxjs";
 
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abstractions/account/billing-account-profile-state.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
-import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
 
 @Component({
   templateUrl: "subscription.component.html",
 })
-export class SubscriptionComponent {
-  hasPremium: boolean;
+export class SubscriptionComponent implements OnInit {
+  hasPremium$: Observable<boolean>;
   selfHosted: boolean;
 
   constructor(
-    private stateService: StateService,
     private platformUtilsService: PlatformUtilsService,
-  ) {}
-
-  async ngOnInit() {
-    this.hasPremium = await this.stateService.getHasPremiumPersonally();
-    this.selfHosted = this.platformUtilsService.isSelfHost();
+    billingAccountProfileStateService: BillingAccountProfileStateService,
+    accountService: AccountService,
+  ) {
+    this.hasPremium$ = accountService.activeAccount$.pipe(
+      switchMap((account) => billingAccountProfileStateService.hasPremiumPersonally$(account.id)),
+    );
   }
 
-  get subscriptionRoute(): string {
-    return this.hasPremium ? "user-subscription" : "premium";
+  ngOnInit() {
+    this.selfHosted = this.platformUtilsService.isSelfHost();
   }
 }

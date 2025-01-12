@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { ChangeDetectionStrategy, Component, Input, OnInit } from "@angular/core";
 import {
   BehaviorSubject,
@@ -8,7 +10,7 @@ import {
   Observable,
 } from "rxjs";
 
-import { SettingsService } from "@bitwarden/common/abstractions/settings.service";
+import { DomainSettingsService } from "@bitwarden/common/autofill/services/domain-settings.service";
 import { EnvironmentService } from "@bitwarden/common/platform/abstractions/environment.service";
 import { buildCipherIcon } from "@bitwarden/common/vault/icon/build-cipher-icon";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
@@ -35,15 +37,16 @@ export class IconComponent implements OnInit {
 
   constructor(
     private environmentService: EnvironmentService,
-    private settingsService: SettingsService,
+    private domainSettingsService: DomainSettingsService,
   ) {}
 
   async ngOnInit() {
-    const iconsUrl = this.environmentService.getIconsUrl();
-
     this.data$ = combineLatest([
-      this.settingsService.disableFavicon$.pipe(distinctUntilChanged()),
+      this.environmentService.environment$.pipe(map((e) => e.getIconsUrl())),
+      this.domainSettingsService.showFavicons$.pipe(distinctUntilChanged()),
       this.cipher$.pipe(filter((c) => c !== undefined)),
-    ]).pipe(map(([disableFavicon, cipher]) => buildCipherIcon(iconsUrl, cipher, disableFavicon)));
+    ]).pipe(
+      map(([iconsUrl, showFavicon, cipher]) => buildCipherIcon(iconsUrl, cipher, showFavicon)),
+    );
   }
 }

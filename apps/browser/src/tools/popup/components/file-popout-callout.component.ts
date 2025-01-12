@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { CommonModule } from "@angular/common";
 import { Component, OnInit } from "@angular/core";
 
@@ -29,6 +31,8 @@ export class FilePopoutCalloutComponent implements OnInit {
   }
 
   popOutWindow() {
+    // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     BrowserPopupUtils.openCurrentPagePopout(window);
   }
 }

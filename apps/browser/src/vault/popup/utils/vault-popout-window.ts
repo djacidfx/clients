@@ -1,3 +1,5 @@
+// FIXME: Update this file to be type safe and remove this and next line
+// @ts-strict-ignore
 import { CipherType } from "@bitwarden/common/vault/enums";
 
 import { BrowserApi } from "../../../platform/browser/browser-api";
@@ -154,7 +156,7 @@ async function openFido2Popout(
     singleActionKey: `${VaultPopoutType.fido2Popout}_${sessionId}`,
     senderWindowId: senderTab.windowId,
     forceCloseExistingWindows: true,
-    windowOptions: { height: 450 },
+    windowOptions: { height: 570 },
   });
 
   return popoutWindow.id;
